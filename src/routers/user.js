@@ -1,6 +1,7 @@
 const User = require('../models/user')
 const router = require('express').Router()
 const auth = require('../middleware/auth')
+const multer = require('multer')
 
 router.post('/users', async (req, res) => {
     const user = new User(req.body)
@@ -32,7 +33,7 @@ router.patch('/users/me', auth, async (req, res) => {
         await req.user.save()
         //Below code replace with above as moongoose bypasses the middleware
         //const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
-        
+
         res.send(req.user)
     } catch (e) {
         res.status(400).send(e)
@@ -83,6 +84,22 @@ router.post('/users/logoutAll', auth, async (req, res) => {
         console.log(e)
         res.status(500).send()
     }
+})
+
+const upload = multer({
+    dest: 'avatars',
+    limits: {
+        fileSize: 1000000,
+    },
+    fileFilter(req, file, cb) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            return cb(new Error("Please upload file which is jpg/jpeg/png"))
+        }
+        cb(undefined, true)
+    }
+})
+router.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+    res.send()
 })
 
 module.exports = router
